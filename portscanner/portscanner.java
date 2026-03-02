@@ -1,8 +1,7 @@
-package portscanner;
-
 import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class portscanner {
@@ -13,7 +12,7 @@ public class portscanner {
     private int threadPoolSize;
 
 
-    public portscanner(String target, int timeout, int threadPoolSize) {
+    public portscanner(String target, List<Integer> ports, int timeout, int threadPoolSize) {
         this.target = target;
 
         if (ports == null) {
@@ -28,23 +27,18 @@ public class portscanner {
         this.timeout = timeout;
         this.threadPoolSize = threadPoolSize;
 
-        this.openPorts = threadPoolSize;
+        this.openPorts = Collections.synchronizedList(new ArrayList<>());
     }
 
-    public PortScanner(String target, List<Integer> ports) {
-        this(target, ports, 1000, 10);  
+    public portscanner(String target, List<Integer> ports) {
+        this(target, ports, 1000, 100);  
     }
 
-    public PortScanner(String target) {
-        this(target, null, 1000, 10);       
+    public portscanner(String target) {
+        this(target, null, 1000, 100);       
     }
 
     
 }
 
 
-package portscanner;
-
-public class portScannerWithResolution extends portscanner {
-    
-}
