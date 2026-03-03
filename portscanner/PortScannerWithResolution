@@ -1,9 +1,0 @@
-public class portScannerWithResolution extends portscanner {
- 
-    
-    puplic portScannerWithResolution(String target, List<Integer> ports, int timeout, int threadPoolSize) {
-        super(target, ports, timeout, threadPoolSize);
-    
-    
-    }
-}
