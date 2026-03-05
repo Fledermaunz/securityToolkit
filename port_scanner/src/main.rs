@@ -13,7 +13,10 @@ const MAX: u16 = 65535; //max value for end port
 // default ip address (localhost)
 const IPFALLBACK: IpAddr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
 
-pub struct Args {
+
+#[derive(Debug, Clone, Bpaf)]
+#[bpaf(options)]
+pub struct Arguments {
     //input
     #[bpaf(long, short, argument("Address"), fallback(IPFALLBACK))]
     pub address: IpAddr,
@@ -21,6 +24,14 @@ pub struct Args {
     pub start_port: u16,
     #[bpaf(long("end"), short('e'), guard(end_port_guard, "Must be less or equal to 65535"), fallback(MAX))]
     end_port: u16,
+}
+
+fn start_port_guard(port: &u16) -> bool {
+    *port > 0
+}
+
+fn end_port_guard(port: &u16) -> bool {
+    *port <= MAX
 }
 
 async fn scan(tx: Sender<u16>, start_port: u16, addr: IpAddr){
@@ -35,17 +46,25 @@ async fn scan(tx: Sender<u16>, start_port: u16, addr: IpAddr){
     }
 }
 
-fn start_port_guard(port: &u16) -> bool {
-    *port > 0
-}
-
-fn end_port_guard(port: &u16) -> bool {
-    *port <= MAX
-}
 
 #[tokio::main]
 async fn main(){
-    println!("Port Scanner");
+    let opts = arguments().run();
+    let (tx, rx) = channel();
+    for i in opts.start_port..opts.end_port {
+        let tx = tx.clone();
+        task::spawn(async move { scan(tx, i, opts.address).await});
+    }  
+    drop(tx);
+    let mut out = vec![];
+    for p in rx {
+        out.push(p);    
+    }
+    println!("");
+    out.sort();
+    for v in out {
+        println!("Port {} is open", v);
+    }
 }
 
 
