@@ -151,8 +151,7 @@ def scan_ports_threaded():
             daemon=True 
         )
         threads.start()
-        threads.append(thread
-        )
+        threads.append(thread)
 
 
     for thread in threads:
@@ -178,7 +177,11 @@ def scan_ports_threaded():
 
 def _scan_chunk(ports):
     """TODO: Add docstring"""
-    pass  # TODO: Implement this method
+    for port in ports:
+        if self.scan_port(port):
+            with self.lock:
+                self.open_ports.append(port)
+            print(f"[+] Port {port} is OPEN")
 
 
 # ============================================================================
@@ -203,7 +206,21 @@ def _scan_chunk(ports):
 
 def display_results():
     """TODO: Add docstring"""
-    pass  # TODO: Implement this method
+    print(f"\n[*] Scan completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")    
+    print(f"\n[*] === Results ===")
+
+    if self.open_ports:
+        self.open_ports.sort()
+        print(f"[*] Found: {len(self.open_ports)} open port(s):")
+        for port in self.open_ports:
+            try:
+                service = socket.getservbyport(port)
+                print(f"   Port {port}: {service}")
+            except OSError:
+                print(f"   Port {port}: Unknown service")
+    else:
+        print("[−] No open ports found")
+
 
 
 # ============================================================================
@@ -221,7 +238,9 @@ def display_results():
 
 def run():
     """TODO: Add docstring"""
-    pass  # TODO: Implement this method
+    self.target = self.resolve_hostname()
+    self.scan_ports_threaded()
+    self.display_results()
 
 
 # ============================================================================
@@ -263,8 +282,83 @@ def run():
 
 def main():
     """TODO: Add docstring"""
-    pass  # TODO: Implement this function
+    parser = argparse.ArgumentParser(description="Simple Port Scanner in Python", 
+                                     epilog="Example usage: python port_scanner.py 192.168.1.1 -p 22,80,443"
+    )
 
+    parser.add_argument("" \
+    "target", 
+    help="Target hostname or IP address to scan"
+    )
+
+    parser.add_argument(
+    "-p", "--ports",
+    help="Specific ports to scan (comma-separated, e.g., 22,80,443)",
+    type=str,
+    default=None
+    )
+
+    parser.add_argument(
+    "-r", "--range",
+    help="Port range to scan (e.g., 1-1000)",
+    type=str,
+    default=None
+    )
+
+    parser.add_argument(
+    "-t", "--timeout",
+    help="Timeout for each port scan (default: 1.0)",
+    type=float,
+    default=1.0
+    )
+
+    parser.add_argument(
+    "-T", "--threads",
+    help="Number of threads to use (default: 100)",
+    type=int,
+    default=100
+    )
+
+    args = parser.parse_args()
+
+    ports = None
+
+    if args.ports:
+        try:
+            ports = [int(p.strip()) for p in args.ports.split(",")]
+        except ValueError:
+            print("Error: Ports must be comma-separated integers")
+            sys.exit(1)
+    elif args.range:
+        try:
+            start, end = map(int, args.range.split("-"))
+            ports = list(range(start, end + 1))
+        except ValueError:
+            print("Error: Port range must be in format 'start-end'")
+            sys.exit(1)
+
+    if args.threads < 1:
+        print("Error: Number of threads must be at least 1")
+        sys.exit(1)
+
+    scanner = PortScanner(
+        target=args.target,
+        ports=ports,
+        timeout=args.timeout,
+        threads_count=args.threads
+    )
+
+    try:
+        scanner.run()
+    except KeyboardInterrupt:
+        print("\n\n[!] Scan interrupted by user.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\n\n[!] An error occurred: {e}")
+        sys.exit(1)
+
+    if __name__ == "__main__":
+        main()
 
 # ============================================================================
 # EXERCISE 9: Entry Point
