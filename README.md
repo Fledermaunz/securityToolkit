@@ -3,7 +3,7 @@ To this point with help of websites (https://eleftheriabatsou.hashnode.dev/tutor
 
 ## Tools
 - Port Scanner (Python, Rust, Java)
-- Metadata Extractor (coming soon)
+- Metadata Extractor (python)
 
 ## Usage
 coming soon...
