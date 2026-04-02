@@ -13,5 +13,5 @@ coming soon...
 2. Metadata Extractor
 3. Brute Force Demo
 
-Step by step: ClI improvement, Logging, Exception Handling improvement, Toolkit v1 ready
+Step by step: CLI improvement, Logging, Exception Handling improvement, Toolkit v1 ready
 
