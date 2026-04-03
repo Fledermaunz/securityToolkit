@@ -10,6 +10,9 @@ To this point with help of websites (https://eleftheriabatsou.hashnode.dev/tutor
 (coming soon)
 
 ### Metadata Extractor
+For the exifread import first change to virtual environment:
+source venv/bin/activate
+
 Important Logs: 
 python metadata-extractor.py -f ~/Bilder/example.jpeg
 
