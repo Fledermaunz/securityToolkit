@@ -6,7 +6,15 @@ To this point with help of websites (https://eleftheriabatsou.hashnode.dev/tutor
 - Metadata Extractor (python)
 
 ## Usage
-coming soon...
+### Port Scanner
+(coming soon)
+
+### Metadata Extractor
+Important Logs: 
+python metadata-extractor.py -f ~/Bilder/example.jpeg
+
+More Logs with --verbose or -v:
+python metadata-extractor.py -f ~/Bilder/example.jpeg --verbose
 
 ## Roadmap to conquer the world
 1. Port scanner

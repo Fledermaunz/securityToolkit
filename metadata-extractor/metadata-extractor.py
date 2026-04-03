@@ -1,6 +1,15 @@
 import exifread
 import argparse
 import os
+import logging
+
+def setup_logging(verbose=False):
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=level, 
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    return logging.getLogger(__name__)
 
 def get_tag_value(tags, tag_name):
     return str(tags.get(tag_name, "Not found"))
@@ -31,56 +40,91 @@ def extract_gps_info(tags):
 
     return None, None
 
-def extract_metadata(file_path):
+def extract_metadata(file_path, logger):
+    logger.debug(f"Checking file path: {file_path}")
+
     if not os.path.isfile(file_path):
-        print(f"File {file_path} does not exist.")
-        return
+        logger.error(f"File {file_path} does not exist.")
+        return None
     
+    logger.info("Opening image file")
     with open(file_path, "rb") as image_file:
+        logger.info("Reading EXIF metadata")
         tags = exifread.process_file(image_file)
 
-        if not tags:
-            print("No metadata found.")
-            return
+    if not tags:
+        logger.warning("No metadata found in the image.")
+        return None
 
-        print("\n=== Metadata Extractor===")
-        print(f"File: {file_path}\n")
+    make = get_tag_value(tags, "Image Make")
+    model = get_tag_value(tags, "Image Model")
+    data_taken = get_tag_value(tags, "EXIF DateTimeOriginal")
+    software = get_tag_value(tags, "Image Software")
+    lat, lon = extract_gps_info(tags)
 
-        make = get_tag_value(tags, "Image Make")
-        model = get_tag_value(tags, "Image Model")
-        data_taken = get_tag_value(tags, "EXIF DateTimeOriginal")
-        software = get_tag_value(tags, "Image Software")
+    metadata = {
+        "file": file_path,
+        "camera_make": make,
+        "camera_model": model,
+        "date_taken": data_taken,
+        "software": software,
+        "gps_latitude": lat,
+        "gps_longitude": lon    
+    }
 
-        print(f"Camera Make: {make}")
-        print(f"Camera Model: {model}")
-        print(f"Date Taken: {data_taken}")
-        print(f"Software: {software}")
+    logger.debug(f"Extracted metadata: {metadata}")
+    return metadata
+    
+def print_metadata(metadata):
+    print("\n=== Metadata Extractor===")
+    print(f"File: {metadata['file']}\n")
+    print(f"Camera Make: {metadata['camera_make']}")
+    print(f"Camera Model: {metadata['camera_model']}")
+    print(f"Date Taken: {metadata['date_taken']}")
+    print(f"Software: {metadata['software']}")
 
-        lat, lon = extract_gps_info(tags)
+    if metadata['gps_latitude'] is not None and metadata['gps_longitude'] is not None:
+        print(f"GPS Latitude: {metadata['gps_latitude']}")
+        print(f"GPS Longitude: {metadata['gps_longitude']}")
+        print(
+            f"Google Maps Link: https://www.google.com/maps?q="
+            f"{metadata['gps_latitude']},{metadata['gps_longitude']}"
+        )
+    else:
+        print("GPS Data: Not found")
 
-        if lat is not None and lon is not None:
-            print(f"GPS Latitude: {lat}")
-            print(f"GPS Longitude: {lon}")
-            print(f"Google Maps Link: https://www.google.com/maps/search/?api=1&query={lat},{lon}")
-        else:
-            print("GPS Data: Not found")
-
-
-
-def main():
+def parse_arguments():
     parser = argparse.ArgumentParser(
-        description="Extract metadata from image"
+        description="Extract useful EXIF metadata from an image file."
     )
 
     parser.add_argument(
         "-f",
         "--file",
         required=True,
-        help="Path to image file"
+        help="Path to the image file"
     )
 
-    args = parser.parse_args()
-    extract_metadata(args.file)
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose logging for debugging"
+    )
+
+    return parser.parse_args()
+
+def main():
+    args = parse_arguments()
+    logger = setup_logging(args.verbose)
+
+    metadata = extract_metadata(args.file, logger)
+
+    if metadata is None:
+        return
+    
+    print_metadata(metadata)
+
 
 if __name__ == "__main__":
     main()
